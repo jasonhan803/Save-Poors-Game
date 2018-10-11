@@ -21,7 +21,7 @@
     <UseGlobalApplicationHostFile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
-    <TypeScriptToolsVersion>2.1</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>3.0</TypeScriptToolsVersion>
     <Use64BitIISExpress />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -56,6 +56,10 @@
     <TypeScriptSourceRoot />
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="js\pixi.js.map" />
+    <Content Include="LICENSE" />
+    <Content Include="README.md" />
+    <Content Include="UISprites.json" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -64,9 +68,82 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="airdrop.html" />
     <Content Include="app.css" />
+    <Content Include="board.html" />
+    <Content Include="enter.html" />
+    <Content Include="game.html" />
+    <Content Include="image\2-0btn_18.png" />
+    <Content Include="image\2-0btn_19.png" />
+    <Content Include="image\award.png" />
+    <Content Include="image\award2.png" />
+    <Content Include="image\awardbig.png" />
+    <Content Include="image\back.jpg" />
+    <Content Include="image\back2.jpg" />
+    <Content Include="image\backs.jpg" />
+    <Content Include="image\backsmall.jpg" />
+    <Content Include="image\board.png" />
+    <Content Include="image\board2.png" />
+    <Content Include="image\button1.png" />
+    <Content Include="image\button2.png" />
+    <Content Include="image\EOS12.png" />
+    <Content Include="image\EOS12s.png" />
+    <Content Include="image\EOS16.png" />
+    <Content Include="image\EOS16s.png" />
+    <Content Include="image\EOS20.png" />
+    <Content Include="image\EOS20s.png" />
+    <Content Include="image\EOS4.png" />
+    <Content Include="image\EOS4s.png" />
+    <Content Include="image\EOS8.png" />
+    <Content Include="image\EOS8s.png" />
+    <Content Include="image\eosairdrop.png" />
+    <Content Include="image\eoscoin.png" />
+    <Content Include="image\eoscoin2.png" />
+    <Content Include="image\Fire.png" />
+    <Content Include="image\go.png" />
+    <Content Include="image\go2.png" />
+    <Content Include="image\green.jpg" />
+    <Content Include="image\groud.jpg" />
+    <Content Include="image\maincard.png" />
+    <Content Include="image\maincard2.png" />
+    <Content Include="image\ok.png" />
+    <Content Include="image\ok2.png" />
+    <Content Include="image\paper.gif" />
+    <Content Include="image\poor.jpg" />
+    <Content Include="image\poor.png" />
+    <Content Include="image\reward.png" />
+    <Content Include="image\reward2.png" />
+    <Content Include="image\rocky.gif" />
+    <Content Include="image\scissor.gif" />
+    <Content Include="image\showcard.png" />
+    <Content Include="image\showcard2.png" />
+    <Content Include="image\star.gif" />
+    <Content Include="image\star.png" />
+    <Content Include="image\title.png" />
+    <Content Include="image\unknown.png" />
+    <Content Include="image\vs.jpg" />
+    <Content Include="image\vs.png" />
+    <Content Include="image\悬赏对战.jpg" />
     <Content Include="index.html" />
+    <Content Include="join.html" />
+    <Content Include="js\eos.js" />
+    <Content Include="js\local.js" />
+    <Content Include="js\moment.js" />
+    <Content Include="js\pixi-extra-filters.js" />
+    <Content Include="js\pixi-particles.min.js" />
+    <Content Include="js\pixi-sound.js" />
+    <Content Include="js\pixi-ui.min.js" />
+    <Content Include="js\pixi.js" />
+    <Content Include="js\PixiTextInput.js" />
+    <Content Include="resource\game.mp3" />
+    <Content Include="resource\gold.mp3" />
+    <Content Include="resource\lose.mp3" />
+    <Content Include="resource\show.mp3" />
+    <Content Include="resource\startback.mp3" />
+    <Content Include="resource\win.mp3" />
+    <Content Include="UISprites.png" />
     <Content Include="Web.config" />
+    <Content Include="withdraw.html" />
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="app.ts" />

@@ -1,0 +1,283 @@
+﻿<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Saving Poors</title>
+    <script src="js/pixi.js"></script>
+    <script src="js/pixi-extra-filters.js"></script>
+    <script src="js/pixi-sound.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/eosjs@16.0.0/lib/eos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <style type="text/css">
+        html, body {
+            height: 100%;
+            width: 100%;
+            background: #011d06;
+        }
+
+        canvas {
+            height: 700px;
+            width: 1200px;
+            margin: auto;
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: pink;
+        }
+    </style>
+
+</head>
+<body>
+    <script type="text/javascript">
+        let scatter = null;
+        let eos = null;
+        let account = null;
+        let accountname = '';
+        var code = 'chinesegamer';
+        var table = 'account';
+        document.addEventListener('scatterLoaded', scatterExtension => {
+
+            scatter = window.scatter;
+            // It is good practice to take this off the window once you have
+            // a reference to it.
+            window.scatter = null;
+
+            // If you want to require a specific version of Scatter
+            scatter.requireVersion(6.0);
+
+            const eosNetwork = {
+                blockchain: 'eos',
+                host: 'api.eoslaomao.com',//'127.0.0.1', // ( or null if endorsed chainId )
+                port: 443, // ( or null if defaulting to 80 )
+                protocol: 'https',
+                chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906'
+            }
+            //window.scatter = null;
+            //scatter.suggestNetwork(eosNetwork);
+            scatter.requireVersion(6.0);
+            scatter.getIdentity({ accounts: [eosNetwork] }).then((identity) => {
+                //1. get EOS account name
+                account = scatter.identity.accounts.find(acc => acc.blockchain === 'eos');
+               
+                //get EOS instance
+
+                console.log("identity info" + identity);
+                const options = {
+                    authorization: [{ actor: account.name, permission: 'active' }],//'user@active',
+                    broadcast: true,//,
+                    sign: true
+                }
+                eos = scatter.eos(eosNetwork, Eos, options, "http");
+                //const amount = "16.0000 SYS";
+
+                console.log("account name " + account.name);
+
+                const localNet = Eos({ httpEndpoint: 'https://api.eoslaomao.com:443', chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906' });
+                // json, code, scope, table, table_key
+                localNet.getTableRows(true, code, account.name, table, 3).then(function (value) {
+                    console.log(value);
+                    for (var j = 0; j < value.rows.length; j++) {
+                        console.log(value.rows[j].owner);
+                        console.log(account.name);
+                        if (value.rows[j].owner == account.name) {
+                            EosText.text = 'Balance: '+ value.rows[j].eos_balance;
+                        }
+                    }
+                });
+
+            }).catch(
+                e => {
+                    console.log("error", e);
+                })
+        });
+
+        let app = new PIXI.Application(1200, 700, { backgroundColor: 0xffffff });
+        //Add the canvas that Pixi automatically created for you to the HTML document
+        // create a background...
+        var background = PIXI.Sprite.fromImage('image/green.jpg');
+        background.width = app.screen.width;
+        background.height = app.screen.height;
+
+        // add background to stage...
+        app.stage.addChild(background);
+
+
+        document.body.appendChild(app.view);
+        var container = new PIXI.Container();
+
+
+        var texture1 = PIXI.Texture.fromImage('image/poor.jpg');
+       
+
+        PIXI.sound.Sound.from({
+            url: 'resource/startback.mp3',
+            autoPlay: true,
+            loop: true,
+            singleInstance: true
+            //complete: function () {
+            //    console.log('Sound finished');
+            //}
+        });
+
+        var spirit = new PIXI.Sprite(texture1);
+
+
+        //var outlineFilterBlue = new PIXI.filters.OutlineFilter(2, 0x99ff99);
+        //var outlineFilterRed = new PIXI.filters.GlowFilter(50, 3, 1, 0xff9999, 0.5)
+
+        spirit.anchor.set(0.5);
+        spirit.x = 0;
+        spirit.y = 0;
+
+        var button = PIXI.Sprite.fromImage('image/button1.png');
+        //var button2 = PIXI.Sprite.fromImage('image/button2.png');
+        // create some textures from an image path
+        var textureButton = PIXI.Texture.fromImage('image/button1.png');
+        var textureButtonDown = PIXI.Texture.fromImage('image/button2.png');
+        var textureButtonOver = PIXI.Texture.fromImage('image/button2.png');
+
+        //load coin images
+        var coin1 = PIXI.Texture.fromImage('image/eoscoin.png');
+        var coin2 = PIXI.Texture.fromImage('image/eoscoin2.png');
+
+        var coin = new PIXI.Sprite(coin1);
+        coin.x = 10;
+        coin.y = 10;
+
+        button.anchor.set(0.5);
+        button.x = (app.screen.width - container.width) / 2;
+        button.y = app.screen.height - 60;
+
+        //button2.anchor.set(0.5);
+        //button2.x = (app.screen.width - container.width) / 2;
+        //button2.y = app.screen.height - 60;
+
+        // create a text object that will be updated...
+        var EosText = new PIXI.Text('EOS:', {
+            fontWeight: 'bold',
+            fontSize: 30,
+            fontFamily: 'Arvo',
+            fill: '#3e1707',
+            align: 'center',
+            stroke: '#ffffff',
+            strokeThickness: 2
+        });
+
+        EosText.x = 120;
+        EosText.y = 50;
+        //EosText.anchor.x = 0.5;
+
+
+        //app.stage.addChild(button);
+        // add background to stage...
+        app.stage.addChild(background);
+        app.stage.addChild(container);
+        container.addChild(spirit);
+        app.stage.addChild(button);
+        app.stage.addChild(coin, EosText);
+
+        function OnButtonOver() {
+            //this.filters = [outlineFilterRed];
+            this.isOver = true;
+            if (this.isdown) {
+                return;
+            }
+            this.texture = textureButtonOver;
+        }
+
+        function OnButtonOut() {
+            //this.filters = [outlineFilterBlue];
+            this.isOver = false;
+            if (this.isdown) {
+                return;
+            }
+            this.texture = textureButton;
+        }
+
+        function onClick() {
+            const amount = "0.0000 EOS";
+            eos.transaction(
+                {
+                    // ...headers,
+                    actions: [
+                        {
+                            account: 'chinesegamer',
+                            name: 'hi',
+                            authorization: [{
+                                actor: account.name,
+                                permission: 'active'
+                            }],
+                            data: {
+                                user: account.name,
+                                quantity: amount
+                            }
+                        },
+                    ]
+                }
+                // options -- example: {broadcast: false}
+            ).then(trx => {
+                console.log("get siged transaction data: ", trx);
+                console.log('transfer completed.');
+                top.location = 'join.html';
+                //store the account that login.
+                Cookies.set('useraccount', account.name, { expires: 7 });
+            })
+
+
+            //}).catch(
+            //    e => {
+            //        console.log("error", e);
+            //    });
+        }
+
+        function OnCoinOver() {
+            //this.filters = [outlineFilterRed];
+            this.isOver = true;
+            if (this.isdown) {
+                return;
+            }
+            this.texture = coin2;
+        }
+
+        function OnCoinOut() {
+            //this.filters = [outlineFilterBlue];
+            this.isOver = false;
+            if (this.isdown) {
+                return;
+            }
+            this.texture = coin1;
+        }
+
+        function onCoinClick() {
+            top.location = 'airdrop.html';
+            //store the account that login.
+            Cookies.set('useraccount', account.name, { expires: 7 });
+        }
+
+        coin.interactive = true;
+        button.on('pointerover', OnButtonOver)
+            .on('pointerout', OnButtonOut).on('pointerdown', onClick);
+
+        button.interactive = true;
+        coin.on('pointerover', OnCoinOver)
+            .on('pointerout', OnCoinOut).on('pointerdown', onCoinClick);
+        container.x = (app.screen.width - container.width) / 2;
+        container.y = (app.screen.height - container.height) / 2;
+
+
+        
+        //const eosNetwork = {
+        //    blockchain: 'eos',
+        //    host: '192.168.1.11',//'127.0.0.1', // ( or null if endorsed chainId )
+        //    port: 8888, // ( or null if defaulting to 80 )
+        //    protocol: 'http',
+        //    chainId: 'cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f'
+        //}
+
+       
+
+    </script>
+</body>
+</html>

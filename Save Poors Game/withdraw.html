@@ -1,0 +1,365 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <script src="js/pixi.js"></script>
+    <script src="js/pixi-particles.min.js"></script>
+    <script src="js/PixiTextInput.js"></script>
+    <script src="js/local.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/eosjs@16.0.0/lib/eos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <title></title>
+    <style>
+        body, p {
+            margin: 0;
+            background-color: blueviolet;
+        }
+
+        body, html, .parent {
+            height: 100%;
+        }
+
+        .middle {
+            overflow: hidden;
+            height: calc(100% - 100px);
+        }
+
+        .left {
+            float: left;
+            width: 100px;
+            margin-right: 20px;
+            height: 100%;
+        }
+
+        .right {
+            overflow: auto;
+            height: 100%;
+        }
+
+        .right-in {
+            height: 1000px;
+        }
+
+        .top, .bottom {
+            height: 50px;
+        }
+    </style>
+
+</head>
+<body>
+    <script>
+        let scatter = null;
+        let eos = null;
+        let account = null;
+        let code = 'chinesegamer';
+        var table = 'account';
+        const localNet = Eos({ httpEndpoint: 'https://api.eoslaomao.com:443', chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906' });
+        document.addEventListener('scatterLoaded', scatterExtension => {
+
+            scatter = window.scatter;
+            // It is good practice to take this off the window once you have
+            // a reference to it.
+            window.scatter = null;
+
+            // If you want to require a specific version of Scatter
+            scatter.requireVersion(6.0);
+
+            const eosNetwork = {
+                blockchain: 'eos',
+                host: 'api.eoslaomao.com',//'127.0.0.1', // ( or null if endorsed chainId )
+                port: 443, // ( or null if defaulting to 80 )
+                protocol: 'https',
+                chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906'
+            }
+            //window.scatter = null;
+            //scatter.suggestNetwork(eosNetwork);
+            scatter.requireVersion(6.0);
+            scatter.getIdentity({ accounts: [eosNetwork] }).then((identity) => {
+                //1. get EOS account name
+                account = scatter.identity.accounts.find(acc => acc.blockchain === 'eos');
+                //get EOS instance
+
+                console.log("identity info" + identity);
+                const options = {
+                    authorization: [{ actor: account.name, permission: 'active' }],//'user@active',
+                    broadcast: true,//,
+                    sign: true
+                }
+                eos = scatter.eos(eosNetwork, Eos, options, "http");
+                //const amount = "16.0000 SYS";
+                console.log("account name" + account.name);
+                console.log('test it');
+
+
+                // json, code, scope, table, table_key
+                localNet.getTableRows(true, code, 'chinesegamer', table, 3).then(function (value) {
+                    console.log(value);
+                    for (var j = 0; j < value.rows.length; j++) {
+                        console.log(value.rows[j].owner);
+                        console.log(account.name);
+                        if (value.rows[j].owner == account.name) {
+                            EosText.text = 'Balance: ' + value.rows[j].eos_balance;
+                        }
+                    }
+                });
+
+
+            }).catch(
+                e => {
+                    console.log("error", e);
+                })
+        });
+
+        window.onresize = function () {
+            app.renderer.view.style.position = "absolute";
+            app.renderer.view.style.display = "block";
+            app.renderer.autoResize = true;
+            app.renderer.resize(window.innerWidth, window.innerHeight);
+            //container.x = (app.screen.width - container.width) / 2 - 100;
+            //container.y = (app.screen.height - container.height) / 2;
+            //coin.y = -300;
+            //title.y = -420;
+            //title.x = -40;
+        }
+
+
+        let app = new PIXI.Application(800, 600, { backgroundColor: 0x001100 });
+
+        app.renderer.view.style.position = "absolute";
+        app.renderer.view.style.display = "block";
+        app.renderer.autoResize = true;
+        app.renderer.resize(window.innerWidth, window.innerHeight);
+
+        //Add the canvas that Pixi automatically created for you to the HTML document
+        document.body.appendChild(app.view);
+        // add background to stage...
+        //app.stage.addChild(background);
+
+        var container = new PIXI.Container();
+
+        app.stage.addChild(container);
+
+        container.x = (app.screen.width - container.width) / 2 - 100;
+        container.y = (app.screen.height - container.height) / 2;
+        //container.addChild(emitter);
+        // Create a new emitter
+
+        var coin = PIXI.Sprite.fromImage('image/eosairdrop.png');
+        container.addChild(coin);
+        coin.y = -300;
+
+        //var title = PIXI.Sprite.fromImage('image/title.png');
+        //container.addChild(title);
+        //title.y = -420;
+        //title.x = -40;
+
+        var go2 = PIXI.Texture.fromImage('image/go2.png');
+        var go = PIXI.Texture.fromImage('image/go.png');
+
+        var next = new PIXI.Sprite(go);
+        next.y = 115;
+        next.x += 260;
+
+
+
+        next.interactive = true;
+        next.on('pointerover', OnButtonOver)
+            .on('pointerout', OnButtonOut).on('pointerdown', onClick);
+
+        container.addChild(next);
+
+        var EosText = new PIXI.Text('EOS:', {
+            fontWeight: 'bold',
+            fontSize: 30,
+            fontFamily: 'Arvo',
+            fill: '#3e1707',
+            align: 'center',
+            stroke: '#ffffff',
+            strokeThickness: 2
+        });
+
+        EosText.x = 120;
+        EosText.y = 50;
+        app.stage.addChild(EosText);
+
+        //Create the text sprite and add it to the `gameOver` scene
+        let style = new PIXI.TextStyle({
+            fontFamily: "Impact",
+            fontSize: 42,
+            fill: "white",
+            align: "middle",
+            "dropShadow": true,
+            "dropShadowAlpha": 0.5,
+            "dropShadowBlur": 2,
+            "dropShadowDistance": 5
+        });
+
+        var inputField = new PixiTextInput("1", style);
+        inputField.width = 120;
+        inputField.x -= 0;
+        inputField.y += 118;
+        inputField.backgroundColor = "0x003300";
+        container.addChild(inputField);
+
+        var TitleText = new PIXI.Text('withdraw EOS. 提取EOS。', style);
+        TitleText.y = -420;
+        TitleText.x = -40;
+        container.addChild(TitleText);
+
+        var emitter = new PIXI.particles.Emitter(
+
+            // The PIXI.Container to put the emitter in
+            // if using blend modes, it's important to put this
+            // on top of a bitmap, and not use the root stage Container
+
+            container,
+
+            // The collection of particle images to use
+            [PIXI.Texture.fromImage('image/fire.png')],
+
+            // Emitter configuration, edit this to change the look
+            // of the emitter
+            {
+                "alpha": {
+                    "start": 1,
+                    "end": 0.21
+                },
+                "scale": {
+                    "start": 0.05,
+                    "end": 0.1,
+                    "minimumScaleMultiplier": 1.08
+                },
+                "color": {
+                    "start": "#b1b7e3",
+                    "end": "#ed133e"
+                },
+                "speed": {
+                    "start": 300,
+                    "end": 50,
+                    "minimumSpeedMultiplier": 1
+                },
+                "acceleration": {
+                    "x": 1000,
+                    "y": 0
+                },
+                "maxSpeed": 0,
+                "startRotation": {
+                    "min": 0,
+                    "max": 360
+                },
+                "noRotation": false,
+                "rotationSpeed": {
+                    "min": 90,
+                    "max": 180
+                },
+                "lifetime": {
+                    "min": 0.17,
+                    "max": 0.8
+                },
+                "blendMode": "normal",
+                "frequency": 0.001,
+                "emitterLifetime": -0.5,
+                "maxParticles": 1000,
+                "pos": {
+                    "x": 25,
+                    "y": -90
+                },
+                "addAtBack": false,
+                "spawnType": "circle",
+                "spawnCircle": {
+                    "x": 3,
+                    "y": 2,
+                    "r": 1
+                }
+            }
+        );
+        // Calculate the current time
+        var elapsed = Date.now();
+
+        // Update function every frame
+        var update = function () {
+
+            // Update the next frame
+            requestAnimationFrame(update);
+
+            var now = Date.now();
+
+            // The emitter requires the elapsed
+            // number of seconds since the last update
+            emitter.update((now - elapsed) * 0.001);
+            elapsed = now;
+
+            // Should re-render the PIXI Stage
+            // renderer.render(stage);
+        }
+
+
+        // Start emitting
+        emitter.emit = true;
+
+        // Start the update
+        update();
+
+        function OnButtonOver() {
+            //this.filters = [outlineFilterRed];
+            this.isOver = true;
+            if (this.isdown) {
+                return;
+            }
+            this.texture = go2;
+        }
+
+        function OnButtonOut() {
+            //this.filters = [outlineFilterBlue];
+            this.isOver = false;
+            if (this.isdown) {
+                return;
+            }
+            this.texture = go;
+        }
+
+        function onClick() {
+            eos.transaction({
+                // ...headers,
+                actions: [
+                    {
+                        account: 'chinesegamer',
+                        name: 'withdraw',
+                        authorization: [{
+                            actor: account.name,
+                            permission: 'active'
+                        }],
+                        data: {
+                            to: account.name,
+                            quantity: changeDecimalBuZero(inputField.text,4) + ' EOS'
+                        }
+                    },
+                ]
+            }).then(trx => {
+                console.log("get siged transaction data: ", trx);
+                console.log('transfer completed.');
+                //top.location = 'join.html';
+                //store the account that login.
+                localNet.getTableRows(true, code, 'chinesegamer', table, 3).then(function (value) {
+                    console.log(value);
+                    for (var j = 0; j < value.rows.length; j++) {
+                        console.log(value.rows[j].owner);
+                        console.log(account.name);
+                        if (value.rows[j].owner == account.name) {
+                            EosText.text = 'Balance: ' + value.rows[j].eos_balance;
+                        }
+                    }
+                });
+                Cookies.set('useraccount', account.name, { expires: 7 });
+            }).catch(
+                e => {
+                    console.log("error", e);
+                });
+        }
+
+
+
+    </script>
+</body>
+</html>

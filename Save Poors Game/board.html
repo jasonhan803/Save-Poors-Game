@@ -1,0 +1,333 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body, html { margin: 0; padding: 0; }
+        canvas { position: fixed; width: 100%; height: 100%; }
+    </style>
+    <script src="js/pixi.js"></script>
+    <script src="js/pixi-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/eosjs@16.0.0/lib/eos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <title></title>
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height" />
+    <meta charset="utf-8" />
+</head>
+<body>
+    <script type="text/javascript">
+        //PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+        var renderer = new PIXI.WebGLRenderer(window.innerWidth, window.innerHeight);
+        var stage = new PIXI.Container();
+        var uiStage = new PIXI.UI.Stage(window.innerWidth, window.innerHeight);
+        var dragContainer = new PIXI.UI.Container();
+        document.body.appendChild(renderer.view);
+        stage.addChild(uiStage);
+         let eos = null;
+        let account = null;
+        let scatter = null;
+        let playersArr = null;
+        const localNet = Eos({ httpEndpoint: 'https://api.eoslaomao.com', chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906' })
+
+        document.addEventListener('scatterLoaded', scatterExtension => {
+
+            scatter = window.scatter;
+            // It is good practice to take this off the window once you have
+            // a reference to it.
+            window.scatter = null;
+
+            // If you want to require a specific version of Scatter
+            scatter.requireVersion(6.0);
+
+
+            const eosNetwork = {
+                blockchain: 'eos',
+                host: 'api.eoslaomao.com',//'127.0.0.1', // ( or null if endorsed chainId )
+                port: 443, // ( or null if defaulting to 80 )
+                protocol: 'https',
+                chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906'
+            }
+            //window.scatter = null;
+            //scatter.suggestNetwork(eosNetwork);
+            scatter.requireVersion(6.0);
+            scatter.getIdentity({ accounts: [eosNetwork] }).then((identity) => {
+                //1. get EOS account name
+                account = scatter.identity.accounts.find(acc => acc.blockchain === 'eos');
+                //get EOS instance
+
+                console.log("identity info" + identity);
+                const options = {
+                    authorization: [{ actor: account.name, permission: 'active' }],//'user@active',
+                    broadcast: true,//,
+                    sign: true
+                }
+                eos = scatter.eos(eosNetwork, Eos, options, "http");
+                //const amount = "16.0000 SYS";
+
+                console.log("account name" + account.name);
+               
+
+            }).catch(
+                e => {
+                    console.log("error", e);
+                })
+        });
+
+        window.addEventListener("resize", function () {
+            resize();
+        });
+
+        var resize = function () {
+            renderer.resize(window.innerWidth * devicePixelRatio, window.innerHeight * devicePixelRatio);
+            uiStage.resize(window.innerWidth * devicePixelRatio, window.innerHeight * devicePixelRatio);
+        }
+
+        resize();
+        PIXI.loader.add('UISprites.json').load(function () {
+            init();
+        });
+
+        console.log(playersArr);
+        // var playersArr = [
+        //     { name: "Alex", score: 1000, kills: 15, deaths: 4, assist: 6, ping: 75 },
+        //     { name: "John", score: 132, kills: 1, deaths: 2, assist: 1, ping: 25 },
+        //     { name: "Charles", score: 595, kills: 9, deaths: 6, assist: 4, ping: 50 },
+        //     { name: "Ivan", score: 705, kills: 10, deaths: 5, assist: 3, ping: 33 },
+        //     { name: "Martin", score: 130, kills: 2, deaths: 7, assist: 7, ping: 21 },
+        //     { name: "Ronnie", score: 10, kills: 0, deaths: 1, assist: 1, ping: 55 },
+        //     { name: "Jimmy", score: 1500, kills: 17, deaths: 1, assist: 8, ping: 55 },
+        //     { name: "Egon", score: 1132, kills: 5, deaths: 3, assist: 5, ping: 25 },
+        //     { name: "Ulrik", score: 595, kills: 9, deaths: 8, assist: 4, ping: 58 },
+        //     { name: "Peter", score: 705, kills: 10, deaths: 3, assist: 4, ping: 33 },
+        //     { name: "Nick", score: 1130, kills: 15, deaths: 5, assist: 3, ping: 247 },
+        //     { name: "Andy", score: 17, kills: 0, deaths: 2, assist: 2, ping: 59 },
+
+        //     { name: "Alex", score: 1000, kills: 15, deaths: 4, assist: 6, ping: 75 },
+        //     { name: "John", score: 132, kills: 1, deaths: 2, assist: 1, ping: 25 },
+        //     { name: "Charles", score: 595, kills: 9, deaths: 6, assist: 4, ping: 50 },
+        //     { name: "Ivan", score: 705, kills: 10, deaths: 5, assist: 3, ping: 33 },
+        //     { name: "Martin", score: 130, kills: 2, deaths: 7, assist: 7, ping: 21 },
+        //     { name: "Ronnie", score: 10, kills: 0, deaths: 1, assist: 1, ping: 55 },
+        //     { name: "Jimmy", score: 1500, kills: 17, deaths: 1, assist: 8, ping: 55 },
+        //     { name: "Egon", score: 1132, kills: 5, deaths: 3, assist: 5, ping: 25 },
+        //     { name: "Ulrik", score: 595, kills: 9, deaths: 8, assist: 4, ping: 58 },
+        //     { name: "Peter", score: 705, kills: 10, deaths: 3, assist: 4, ping: 33 },
+        //     { name: "Nick", score: 1130, kills: 15, deaths: 5, assist: 3, ping: 247 },
+        //     { name: "Andy", score: 17, kills: 0, deaths: 2, assist: 2, ping: 59 },
+
+        // ];
+
+        function init() {
+            var whiteBG = PIXI.Texture.fromFrame("UI/ui-box-1.png");
+            var innerBG = PIXI.Texture.fromFrame("UI/ui-box-2.png");
+            var lineSprite = PIXI.Texture.fromFrame("UI/ui-horizontal-line-border.png");
+            var horizontalGradient = PIXI.Texture.fromFrame("UI/horizontal-gradient.png");
+            var solidBox = PIXI.Texture.fromFrame("UI/solid-box.png");
+            var hlTextStyle = { fill: ['#ffffff', '#ededed'], fontSize: 18, fontFamily: 'Calibri', fontWeight: 'bold' };
+            var sliderTextStyle = { fill: ['#ffffff', '#ededed'], fontSize: 18, fontFamily: 'Calibri', fontWeight: 'bold' };
+
+            wrapper = new PIXI.UI.Container();
+            wrapper.verticalAlign = "middle";
+            wrapper.horizontalAlign = "center";
+            wrapper.height = "90%";
+            wrapper.width = "96%";
+            wrapper.minWidth = 400;
+            uiStage.addChild(wrapper);
+
+            leaderboardContainer = new PIXI.UI.Container("100%", "100%");
+            leaderboardContainer.anchorRight = 0;
+            wrapper.addChild(leaderboardContainer);
+
+
+            container = new PIXI.UI.SliceSprite(whiteBG, 5);
+            container.height = 580;
+            container.width = '95%';
+            container.top = "50%"
+            //container.maxWidth = 1200;
+            container.minWidth = 550;
+            container.maxHeight = "100%";
+            container.anchorLeft = 0;
+            container.rotation = 3;
+            container.scale = 0;
+            container.pivot = 0.5;
+            leaderboardContainer.addChild(container);
+
+ 			var TitleStyle = { fill: i == 1 ? ['#ff6c6c', '#ff3838'] : ['#5ebef2', '#26aff1'], fontSize: 24, fontFamily: 'Calibri', fontWeight: 'bold' };
+            var BigTitle = new PIXI.UI.Text("积分榜 Leader Board", TitleStyle);
+            //BigTitle.anchor.set(0.5);
+            //BigTitle.x = (renderer.screen.width) / 2 - 50;
+            BigTitle.right = "60%"; 
+        	BigTitle.y = 20;
+
+        	leaderboardContainer.addChild(BigTitle);
+
+            for (var i = 0; i < 1; i++) {
+                var section = new PIXI.UI.Container();
+                if (i == 1) section.anchorRight = 0;
+                section.anchorBottom = 0;
+                section.anchorTop = 0;
+                section.width = "100%";
+                container.addChild(section);
+
+                var teamContainer = new PIXI.UI.SliceSprite(innerBG, 5);
+                teamContainer.anchorTop = teamContainer.anchorBottom = 6;
+                teamContainer.anchorRight = i == 1 ? 6 : 3;
+                teamContainer.anchorLeft = i == 1 ? 3 : 6;
+                teamContainer.tint = i == 1 ? 0x3b0000 : 0x252934;
+                section.addChild(teamContainer);
+
+				
+                var headlineStyle = { fill: i == 1 ? ['#ff6c6c', '#ff3838'] : ['#5ebef2', '#26aff1'], fontSize: 18, fontFamily: 'Calibri', fontWeight: 'bold' };
+                var BigTitle = new PIXI.UI.Text("PLAYER", headlineStyle);
+                var HeadlinePlayer = new PIXI.UI.Text("PLAYER", headlineStyle);
+                var HeadlineScore = new PIXI.UI.Text("STAR", headlineStyle);
+                var HeadlineKDA = new PIXI.UI.Text("CARD", headlineStyle);
+                //var HeadlinePing = new PIXI.UI.Text("PING", headlineStyle);
+                HeadlinePlayer.anchorTop = HeadlineScore.anchorTop = HeadlineKDA.anchorTop = 19; //= HeadlinePing.anchorTop = 19;
+                HeadlinePlayer.left = 13;
+                HeadlineScore.right = "55%";
+                HeadlineKDA.right = "33%";
+                //HeadlinePing.anchorRight = "2%";
+
+                var headlineStroke = new PIXI.UI.SliceSprite(lineSprite, 2, true, false);
+                headlineStroke.tint = i == 1 ? 0xff6c6c : 0x76c3f2;
+                headlineStroke.anchorLeft = headlineStroke.anchorRight = 8;
+                headlineStroke.anchorTop = 37;
+
+                var sortableList = new PIXI.UI.SortableList(true, 0.4, PIXI.UI.Ease.Power2.easeOut);
+                sortableList.height = "100%";
+                sortableList.width = "100%";
+                sortableList.droppable = true;
+                sortableList.dropGroup = "player";
+
+                var ScrollingContainer = new PIXI.UI.ScrollingContainer({ scrollX: false, scrollY: true });
+                ScrollingContainer.anchorLeft = ScrollingContainer.anchorRight = ScrollingContainer.anchorBottom = 0;
+                ScrollingContainer.anchorTop = 40;
+                ScrollingContainer.dragThreshold = 5;
+                ScrollingContainer.dragRestrictAxis = "y";
+                ScrollingContainer.addChild(sortableList);
+                ScrollingContainer.on("dragStart", function () {
+                    console.log("start drag scroll");
+                });
+
+                ScrollingContainer.on("dragEnd", function () {
+                    console.log("end drag scroll");
+                });
+
+                ScrollBar = new PIXI.UI.ScrollBar({
+                    track: new PIXI.UI.SliceSprite(innerBG, 4),
+                    handle: new PIXI.UI.SliceSprite(innerBG, 4),
+                    vertical: true,
+                    scrollingContainer: ScrollingContainer,
+                    autohide: true,
+                });
+                ScrollBar.track.width = ScrollBar.handle.width = 8;
+                ScrollBar.track.pivotX = -0.5;
+                ScrollBar.anchorTop = 38;
+                ScrollBar.anchorBottom = 1;
+                ScrollBar.anchorRight = 0;
+                ScrollBar.track.tint = 0x222222;
+                ScrollBar.track.blendMode = 0;
+
+
+                var textStyle = { fill: ['#ffffff', '#ededed'], fontSize: 14, fontFamily: 'Calibri', fontWeight: 'bold' };
+                //console.log(playersArr.length);
+                //console.log(playersArr);
+                let thegamescope = '';
+                localNet.getTableRows(true, 'chinesegamer', 'chinesegamer', 'happygames', 3, 0, 100, 100).then(function (value) {
+                    console.log(value);
+                    for (var j = 0; j < value.rows.length; j++) {
+                        if (value.rows[j].id == Cookies.get('game_id')) {
+                            thegamescope = value.rows[j].organizer;
+                            console.log(thegamescope);
+                            localNet.getTableRows(true, 'chinesegamer', thegamescope, 'happyitems', 3, 0, 100, 100).then(function (value) {
+                                console.log(value);
+                                for (var j = 0; j < value.rows.length; j++) {
+                                    //console.log(value.rows[j].game_id + " " + value.rows[j].owner + ' ' + Cookies.get('game_id') + ' ' + account);
+                                    if (value.rows[j].game_id == Cookies.get('game_id')) {
+                                        (function () {
+                                            var player = value.rows[j];
+                                            console.log(player);
+                                            var playerItem = new PIXI.UI.Container();
+                                            playerItem.draggable = true;
+                                            playerItem.dragGroup = "player";
+                                            playerItem.dragThreshold = 5;
+                                            playerItem.dragRestrictAxis = "x"
+                                            playerItem.dragContainer = dragContainer;
+                                            playerItem.x = playerItem.y = 0;
+                                            playerItem.width = "100%";
+                                            playerItem.height = 40;
+
+
+                                            var playerItemUnderline = new PIXI.UI.SliceSprite(lineSprite, 2, true, false);
+                                            playerItemUnderline.anchorLeft = playerItemUnderline.anchorRight = 10;
+                                            playerItemUnderline.anchorBottom = 0;
+                                            playerItemUnderline.alpha = 0.7;
+
+
+                                            var playerItemBG = new PIXI.UI.Sprite(horizontalGradient);
+                                            playerItemBG.anchorLeft = playerItemBG.anchorRight = 10;
+                                            playerItemBG.anchorTop = 0;
+                                            playerItemBG.anchorBottom = 3;
+                                            playerItemBG.blendMode = 1;
+
+                                            var Name = new PIXI.UI.Text(player.owner, textStyle);
+                                            var Score = new PIXI.UI.Text(player.star, textStyle);
+                                            var KDA = new PIXI.UI.Text(player.papercard  + player.rockcard  + player.scissorscard + "", textStyle);
+                                            //var Ping = new PIXI.UI.Text(player.ping, textStyle);
+
+                                            Name.anchorTop = Score.anchorTop = KDA.anchorTop = 10 //= Ping.anchorTop = 6;
+                                            Name.left = 13;
+                                            Score.right = "55%";
+                                            KDA.right = "33%";
+                                            //Ping.anchorRight = "2%";
+
+                                            playerItem.addChild(playerItemUnderline, Name, Score, KDA); //Ping
+                                            playerItem.altering = function (alt) {
+                                                if (alt) PIXI.UI.Tween.to(playerItemBG, 0.3, { alpha: 0 });
+                                                else PIXI.UI.Tween.to(playerItemBG, 0.3, { alpha: 0.09 });
+                                            };
+
+
+                                            sortableList.addChild(playerItem,
+                                                function () {
+                                                    return player.star;
+                                                },
+                                                function () {
+                                                    return player.papercard;
+                                                });
+                                        })();
+
+                                    }
+                                }
+                            });
+                            break;
+                        }
+                    }
+                    //inter:
+                });
+                
+
+                teamContainer.addChild(HeadlinePlayer, HeadlineScore, HeadlineKDA,  headlineStroke, ScrollingContainer, ScrollBar);//HeadlinePing,
+
+
+            }
+            uiStage.addChild(dragContainer);
+            setTimeout(function () {
+
+                PIXI.UI.Tween.to(container, 1.3, { scaleX: 1, rotation: 0 }, PIXI.UI.Ease.Sine.SineOut);
+                PIXI.UI.Tween.to(container, 1.25, { scaleY: 1 }, PIXI.UI.Ease.Sine.SineIn);
+            }, 100);
+            Update(performance.now());
+        }
+
+
+        PIXI.UI.Ticker.disabled = true;
+        function Update(time) {
+            PIXI.UI.Ticker.update(time);
+            renderer.render(stage);
+            requestAnimationFrame(Update);
+        }
+
+    </script>
+</body>
+</html>

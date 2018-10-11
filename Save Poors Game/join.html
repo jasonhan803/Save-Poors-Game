@@ -1,0 +1,474 @@
+﻿<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Saving Poors</title>
+    <script src="js/pixi.js"></script>
+    <script src="js/pixi-extra-filters.js"></script>
+    <script src="js/pixi-sound.js"></script>
+    <script src="js/moment.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/eosjs@16.0.0/lib/eos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <style type="text/css">
+        html, body {
+            height: 100%;
+            width: 100%;
+            background: #011d06;
+        }
+        canvas {
+            height: 700px;
+            width: 1200px;
+            margin: auto;
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: pink;
+        }
+    </style>
+</head>
+<body>
+    <script type="text/javascript">
+
+        let app = new PIXI.Application(1200, 700, { backgroundColor: 0xffffff });
+        let scatter = null;
+        let eosobj = null;
+        let account = null;
+        let game_id = -1;
+        let host = null;
+        let mygamearray = new Array();
+        var outlineFilterBlue = new PIXI.filters.OutlineFilter(2, 0x99ff99);
+        var outlineFilterRed = new PIXI.filters.GlowFilter(30, 1, 0, 0xff9999, 1);
+        document.addEventListener('scatterLoaded', scatterExtension => {
+
+            scatter = window.scatter;
+            // It is good practice to take this off the window once you have
+            // a reference to it.
+            window.scatter = null;
+
+            // If you want to require a specific version of Scatter
+            scatter.requireVersion(6.0);
+
+            const eosNetwork = {
+                blockchain: 'eos',
+                host: 'api.eoslaomao.com',//'127.0.0.1', // ( or null if endorsed chainId )
+                port: 443, // ( or null if defaulting to 80 )
+                protocol: 'https',
+                chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906'
+            }
+            //window.scatter = null;
+            //scatter.suggestNetwork(eosNetwork);
+            scatter.requireVersion(6.0);
+            scatter.getIdentity({ accounts: [eosNetwork] }).then((identity) => {
+                //1. get EOS account name
+                account = scatter.identity.accounts.find(acc => acc.blockchain === 'eos');
+                //get EOS instance
+
+                console.log("identity info" + identity);
+                const options = {
+                    authorization: [{ actor: account.name, permission: 'active' }],//'user@active',
+                    broadcast: true,//,
+                    sign: true
+                }
+
+                eosobj = scatter.eos(eosNetwork, Eos, options, "https");
+                //const amount = "16.0000 SYS";
+
+                console.log("account name" + account.name);
+
+                var code = 'chinesegamer';
+                var table2 = 'account';
+                const localNet = Eos({ httpEndpoint: 'https://api.eoslaomao.com:443', chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906' });
+                // json, code, scope, table, table_key
+                localNet.getTableRows(true, code, account.name, table2, 3).then(function (value) {
+                    console.log(value);
+                    for (var j = 0; j < value.rows.length; j++) {
+                        console.log(value.rows[j].owner);
+                        console.log(account.name);
+                        if (value.rows[j].owner == account.name) {
+                            EosText.text = 'Balance: ' + value.rows[j].eos_balance;
+                        }
+                    }
+                });
+
+              
+
+                
+
+            }).catch(
+                e => {
+                    console.log("error", e);
+                })
+        });
+        //Add the canvas that Pixi automatically created for you to the HTML document
+
+
+        // create a background...
+        var background = PIXI.Sprite.fromImage('image/green.jpg');
+        background.width = app.screen.width;
+        background.height = app.screen.height;
+
+        // add background to stage...
+        app.stage.addChild(background);
+
+
+        document.body.appendChild(app.view);
+        var container = new PIXI.Container();
+        //container.visible = true;
+        //var gameOverScene = new PIXI.Container();
+
+        //Create the `gameOver` scene
+        var depositCoinScene = new PIXI.Container();
+
+
+        //Make the `gameOver` scene invisible when the game first starts
+        depositCoinScene.visible = false;
+
+
+        //Create the text sprite and add it to the `gameOver` scene
+        let style2 = new PIXI.TextStyle({
+            fontFamily: "Futura",
+            fontSize: 42,
+            fill: "white"
+        });
+        let ssmessage = new PIXI.Text('请存入EOS，并开始游戏!', style2);
+        ssmessage.x = 180;
+        ssmessage.y = 5;
+        depositCoinScene.addChild(ssmessage);
+
+        var texture = PIXI.Texture.fromImage('image/maincard.png');
+
+        var eosTexture4 = PIXI.Texture.fromImage('image/EOS4s.png');
+        var eosTexture8 = PIXI.Texture.fromImage('image/EOS8s.png');
+        var eosTexture12 = PIXI.Texture.fromImage('image/EOS12s.png');
+        var eosTexture16 = PIXI.Texture.fromImage('image/EOS16s.png');
+        var eosTexture20 = PIXI.Texture.fromImage('image/EOS20s.png');
+
+
+        var eos = new PIXI.Sprite(eosTexture4);
+        //eos.anchor.set(0.5);
+        eos.x = 180;
+        eos.y = 70;
+        eos.amount = '4.0000 EOS';
+        eos.interactive = true;
+        eos.on('pointerover', OnEOSOver)
+            .on('pointerout', OnEOSOut).on('pointerdown', onEOSClick);
+        depositCoinScene.addChild(eos);
+
+
+        var eos = new PIXI.Sprite(eosTexture8);
+        //eos.anchor.set(0.5);
+        eos.x = 180 + 280;
+        eos.y = 70;
+        eos.amount = '8.0000 EOS';
+        eos.interactive = true;
+        eos.on('pointerover', OnEOSOver)
+            .on('pointerout', OnEOSOut).on('pointerdown', onEOSClick);
+        depositCoinScene.addChild(eos);
+
+        var eos = new PIXI.Sprite(eosTexture12);
+        //eos.anchor.set(0.5);
+        eos.x = 180 + 560;
+        eos.y = 70;
+        eos.amount = '12.0000 EOS';
+        eos.interactive = true;
+        eos.on('pointerover', OnEOSOver)
+            .on('pointerout', OnEOSOut).on('pointerdown', onEOSClick);
+        depositCoinScene.addChild(eos);
+
+        var eos = new PIXI.Sprite(eosTexture16);
+        //eos.anchor.set(0.5);
+        eos.x = 320;
+        eos.y = 70 + 310;
+        eos.amount = '16.0000 EOS';
+        eos.interactive = true;
+        eos.on('pointerover', OnEOSOver)
+            .on('pointerout', OnEOSOut).on('pointerdown', onEOSClick);
+        depositCoinScene.addChild(eos);
+
+        var eos = new PIXI.Sprite(eosTexture20);
+        //eos.anchor.set(0.5);
+        eos.x = 320 + 280;
+        eos.y = 70 + 310;
+        eos.amount = '20.0000 EOS';
+        eos.interactive = true;
+        eos.on('pointerover', OnEOSOver)
+            .on('pointerout', OnEOSOut).on('pointerdown', onEOSClick);
+        depositCoinScene.addChild(eos);
+
+
+        app.stage.addChild(depositCoinScene);
+
+
+        var texture = PIXI.Texture.fromImage('image/maincard.png');
+        var texture2 = PIXI.Texture.fromImage('image/maincard2.png');
+        var coinTexture = PIXI.Texture.fromImage('image/eoscoin.png');
+
+        PIXI.sound.Sound.from({
+            url: 'resource/startback.mp3',
+            autoPlay: true,
+            loop: true,
+            singleInstance: true
+            //complete: function () {
+            //    console.log('Sound finished');
+            //}
+        });
+
+        var spirit = new PIXI.Sprite(texture);
+        var style = new PIXI.TextStyle({
+            //fontFamily: 'Arial',
+            fontSize: 16,
+            //fontStyle: 'italic',
+            //fontWeight: 'bold',
+            fill: ['#ffffff'], // gradient
+            //stroke: '#4a1850',
+            //strokeThickness: 2,
+            dropShadow: true,
+            dropShadowColor: '#000000',
+            dropShadowBlur: 2,
+            dropShadowAngle: Math.PI / 6,
+            dropShadowDistance: 2
+            //wordWrap: true,
+            //wordWrapWidth: 440
+        });
+
+        var code = 'chinesegamer';
+        var table = 'happygames';
+        //const eosNetwork = {
+        //    blockchain: 'eos',
+        //    host: '192.168.1.11',//'127.0.0.1', // ( or null if endorsed chainId )
+        //    port: 8888, // ( or null if defaulting to 80 )
+        //    protocol: 'http',
+        //    chainId: 'cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f'
+        //}
+
+        const localNet = Eos({ httpEndpoint: 'https://api.eoslaomao.com:443', chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906' });
+
+
+        
+        // json, code, scope, table, table_key
+        localNet.getTableRows(true, code, 'chinesegamer', table, 'status', 0, 100, 100, "i64").then(function (value) {
+            console.log(value);
+            var sequence = 0;
+            for (var j = 0; j < value.rows.length; j++) {
+                if (value.rows[j].status == 1) {
+                    var bunny = new PIXI.Sprite(texture);
+                    bunny.anchor.set(0.5);
+                    bunny.x = (sequence % 5) * 200;
+                    bunny.y = Math.floor(sequence / 5) * 210;
+                    bunny.gameid = value.rows[j].id;
+                    bunny.joined = 'n';
+                    bunny.host = value.rows[j].organizer;
+                    container.addChild(bunny);
+                    bunny.interactive = true;
+                    bunny.on('pointerover', OnButtonOver)
+                        .on('pointerout', OnButtonOut).on('pointerdown', onClick);
+                    sequence++;
+
+                    var richText = new PIXI.Text('Host: ' + value.rows[j].organizer, style);
+                    richText.anchor.set(0.5);
+                    richText.x = bunny.x;
+                    richText.y = bunny.y - 40;
+                    container.addChild(richText);
+
+                    richText = new PIXI.Text('Players: ' + value.rows[j].playernum, style);
+                    richText.anchor.set(0.5);
+                    richText.x = bunny.x;
+                    richText.y = bunny.y - 10;
+                    container.addChild(richText);
+
+                    richText = new PIXI.Text('Game#: ' + value.rows[j].id, style);
+                    richText.anchor.set(0.5);
+                    richText.x = bunny.x;
+                    richText.y = bunny.y - 65;
+                    container.addChild(richText);
+
+                    var timestamp1 = moment.utc(value.rows[j].deadline);
+                    var timestamp2 = moment.utc();
+                    var timegap = timestamp1 - timestamp2;
+                    var hour = parseInt(timegap / 3600000); var remaining = timegap % 3600000;
+                    var minute = parseInt(remaining / 60000); remaining = remaining % 60000
+                    var second = parseInt(remaining / 1000);
+
+                    richText = new PIXI.Text('Pool: ' + value.rows[j].bet, style);
+                    richText.anchor.set(0.5);
+                    richText.x = bunny.x;
+                    richText.y = bunny.y + 20;
+                    container.addChild(richText);
+
+                    if (timegap >= 0)
+                    //parseInt(5 / 2)
+                    {
+                        richText = richText = new PIXI.Text('count:' + pad(hour, 2) + ":" + pad(minute, 2) + ":" + pad(second, 2), style);
+                        bunny.status = 'go';
+                    }
+                    else {
+                        richText = richText = new PIXI.Text('Game ended!', style);
+                        bunny.status = 'over';
+                    }
+                    richText.anchor.set(0.5);
+                    richText.x = bunny.x;
+                    richText.y = bunny.y + 50;
+                    container.addChild(richText);
+
+                    var thegameid = value.rows[j].id
+
+                    localNet.getTableRows(true, code, value.rows[j].organizer, "happyitems", 3, 0, 100, 100).then(function (itemvalue) {
+                        console.log(itemvalue);
+                        for (var h = 0; h < value.rows.length; h++) {
+                            //console.log(value.rows[j].game_id + " " + value.rows[j].owner + ' ' + Cookies.get('game_id') + ' ' + account);
+                            if (itemvalue.rows[h].owner == Cookies.get('useraccount') && itemvalue.rows[h].game_id == thegameid) {
+                                //mygamearray.push(value.rows[h].game_id);
+                                richText = new PIXI.Text('Joined Game', style);
+                                richText.anchor.set(0.5);
+                                richText.x = bunny.x;
+                                richText.y = bunny.y + 80;
+                                container.addChild(richText);
+                                bunny.joined = 'y';
+                                break;
+                            }
+                        }
+                    });
+
+                    //if (mygamearray.indexOf(value.rows[j].id) != -1) {
+                    //    richText = new PIXI.Text('Joined Game', style);
+                    //    richText.anchor.set(0.5);
+                    //    richText.x = bunny.x;
+                    //    richText.y = bunny.y + 50;
+                    //    container.addChild(richText);
+                    //    bunny.joined = 'y';
+                    //}
+                }
+            }
+        });
+
+        app.stage.addChild(container);
+
+
+
+
+        container.x = 180;//(app.screen.width ) / 2;
+        container.y = (app.screen.height) / 2;
+
+        function pad(num, n) {
+            return Array(n > num ? (n - ('' + num).length + 1) : 0).join(0) + num;
+        }
+
+        function OnEOSOver() {
+            //this.filters = [outlineFilterRed];
+            this.isOver = true;
+            if (this.isdown) {
+                return;
+            }
+            this.filters = [outlineFilterRed];
+            this.y -= 10;
+        }
+
+        function OnEOSOut() {
+            //this.filters = [outlineFilterBlue];
+            this.isOver = false;
+            if (this.isdown) {
+                return;
+            }
+            this.filters = null;
+            this.y += 10;
+        }
+
+        function onEOSClick() {
+           
+            eosobj.transaction(
+                {
+                    // ...headers,
+                    actions: [
+                        {
+                            account: 'chinesegamer',
+                            name: 'entergame',
+                            authorization: [{
+                                actor: account.name,
+                                permission: 'active'
+                            }],
+                            data: {
+                                gameid: game_id,
+                                owner: account.name,
+                                quantity: this.amount
+                            }
+                        },
+                    ]
+                }
+                // options -- example: {broadcast: false}
+            ).then(trx => {
+                console.log("get siged transaction data: ", trx);
+                console.log('transfer completed.');
+                Cookies.set('game_id', game_id, { expires: 1 });
+                Cookies.set('game_host', host, { expires: 1 });
+                PIXI.sound.Sound.from({
+                    url: 'resource/gold.mp3',
+                    autoPlay: true
+                    //complete: function () {
+                    //    console.log('Sound finished');
+                    //}
+                });
+                top.location = 'game.html';
+            })
+
+
+
+        }
+
+        function OnButtonOver() {
+            //this.filters = [outlineFilterRed];
+            this.isOver = true;
+            if (this.isdown) {
+                return;
+            }
+            this.texture = texture2;
+        }
+
+        function OnButtonOut() {
+            //this.filters = [outlineFilterBlue];
+            this.isOver = false;
+            if (this.isdown) {
+                return;
+            }
+            this.texture = texture;
+        }
+
+        function onClick() {           
+            game_id = this.gameid;
+            host = this.host;
+            //已经加入的游戏
+            if (this.joined == 'y' && this.status == 'go') {
+               
+                    Cookies.set('game_id', game_id, { expires: 1 });
+                    Cookies.set('game_host', this.host, { expires: 1 });
+                    top.location = 'game.html';
+               
+            }
+            else if (this.joined == 'n' && this.status == 'go' ){
+                depositCoinScene.visible = true;
+                container.visible = false;
+            }
+
+        }
+
+
+        // create a text object for EOS balance...
+        var EosText = new PIXI.Text('EOS:', {
+            fontWeight: 'bold',
+            fontSize: 30,
+            fontFamily: 'Arvo',
+            fill: '#3e1707',
+            align: 'center',
+            stroke: '#ffffff',
+            strokeThickness: 2
+        });
+
+        EosText.x = 720;
+        EosText.y = 10;
+
+        app.stage.addChild(EosText);
+
+    </script>
+</body>
+</html>

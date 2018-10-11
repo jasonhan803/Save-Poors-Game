@@ -1,15 +1,276 @@
 ﻿<!DOCTYPE html>
-
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <title>TypeScript HTML App</title>
-    <link rel="stylesheet" href="app.css" type="text/css" />
-    <script src="app.js"></script>
+    <meta charset="UTF-8">
+    <title>Scatter DEMO</title>
+   <script src="https://cdn.jsdelivr.net/npm/eosjs@16.0.0/lib/eos.js"></script>
+<!--     integrity="sha512-vNyLnOEb7uFmEtVbLnyZQ9/k4zckM2Vu3jJOKq6XfWEVZG0yKcjDExVN4EQ7e3F+rePWRncMolI2xFi/3qo62A=="
+    crossorigin="anonymous"> -->
 </head>
-<body>
-    <h1>TypeScript HTML App</h1>
 
-    <div id="content"></div>
+<body>
+
+Hi this is Scatter Demo, Please see console logs.
+
 </body>
+<script>
+
+    document.addEventListener('scatterLoaded', scatterExtension => {
+
+        const scatter = window.scatter;
+        // It is good practice to take this off the window once you have 
+         // a reference to it.
+        window.scatter = null;
+
+        // If you want to require a specific version of Scatter
+        scatter.requireVersion(6.0);
+
+
+        //const eosNetwork = {
+        //    blockchain: 'eos',
+        //    host: '192.168.1.4',//'127.0.0.1', // ( or null if endorsed chainId )
+        //    port: 8888, // ( or null if defaulting to 80 )
+        //    protocol:'http',
+        //    chainId:'cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f'
+        //}
+
+        const eosNetwork = {
+            blockchain: 'eos',
+            host: 'api.eoslaomao.com',//'127.0.0.1', // ( or null if endorsed chainId )
+            port: 443, // ( or null if defaulting to 80 )
+            protocol: 'https',
+            chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906'
+        }
+
+        //EOS options
+        const eosOptions = {
+            broadcast : true  // put it false, then the transaction should not be broadcost
+        }
+         console.log('test it');
+        //suggesct net work to user
+        //scatter.suggestNetwork(eosNetwork);
+        //console.log(eosNetwork);
+
+        // scatter.getIdentity = () => {
+        //     scatter.getIdentity([eosNetwork]).then(identity => {
+        //       console.log(identity, "identitySuccess")
+        //     }).catch(error => {
+        //       console.log(error, "identityCrisis")
+        //     })
+        //   }
+
+//const eos = scatter.eos(eosNetwork, Eos.Localnet, eosOptions,"http");
+        // scatter.getIdentity
+        scatter.getIdentity({accounts:[eosNetwork]}).then((identity) => {
+                //1. get EOS account name
+                const account = scatter.identity.accounts.find(acc => acc.blockchain === 'eos');              
+                console.log("identity info" + identity);
+                 const options = {
+                        authorization: [{actor:account.name, permission:'active'}],//'user@active',
+                        broadcast: true,//,
+                        sign: true
+                        } 
+                //get EOS instance
+                const eos = scatter.eos(eosNetwork, Eos, options,"https");
+                const requiredFields = {
+                    accounts:[eosNetwork]
+                }
+                const amount = "30.0001 EOS";
+                eos.transaction(
+                {
+                    // ...headers,
+                        actions: [
+                        //    {
+                        //    account: 'chinesegamer',
+                        //    name: 'startgame',
+                        //    authorization: [{
+                        //        actor: account.name,
+                        //        permission: 'active'
+                        //    }],
+                        //    data: {
+                        //        host: account.name,
+                        //        bet: amount,
+                        //        lasthour: 1
+                        //        //quantity: amount 
+                        //    }
+                        //}
+                       {
+                         account: 'eosio.token',
+                         name: 'transfer',
+                         authorization: [{
+                           actor: account.name,
+                           permission: 'active'
+                         }],
+                         data: {
+                           from: account.name,
+                           to: 'greataccount',
+                           quantity: amount,
+                           memo: 'deposit ' + 3 + ':' + amount + ':' + account.name
+                         }
+                       }
+                    //   {
+                    //     account: 'happy',
+                    //     name: 'deposit',
+                    //     authorization: [{
+                    //       actor: account.name,
+                    //       permission: 'active'
+                    //     }],
+                    //     data: {
+                    //       from: account.name,
+                    //       quantity: amount
+                    //     }
+                    //   },
+                         //{
+                         //    account: 'chinesegamer',
+                         //    name: 'delaccount',
+                         //    authorization: [{
+                         //        actor: account.name,
+                         //        permission: 'active'
+                         //    }],
+                         //    data: {
+                         //        user: 'yangjian1111'
+                         //        //quantity: amount
+                         //    }
+                         //}
+
+                        //{
+                        //  account: 'chinesegamer',
+                        //  name: 'hi',
+                        //  authorization: [{
+                        //    actor: account.name,
+                        //    permission: 'active'
+                        //  }],
+                        //  data: {
+                        //    user: account.name
+                        //    //quantity: amount
+                        //  }
+                        //}
+                      
+                            //{
+                            //    account: 'chinesegamer',
+                            //    name: 'createhost',
+                            //    authorization: [{
+                            //        actor: account.name,
+                            //        permission: 'active'
+                            //    }],
+                            //    data: {
+                            //        host: 'chengdechina',
+                            //        opennum: 5
+                            //    }
+                            //}
+                         //{
+                         //    account: 'chinesegamer',
+                         //    name: 'closegame',
+                         //    authorization: [{
+                         //        actor: account.name,
+                         //        permission: 'active'
+                         //    }],
+                         //    data: {
+                         //        gameid: 4
+                         //        //quantity: amount
+                         //    }
+                         //}
+                    // {
+                    //     account: 'happy',
+                    //     name: 'entergame',
+                    //     authorization: [{
+                    //       actor: account.name,
+                    //       permission: 'active'
+                    //     }],
+                    //     data: {
+                    //       gameid: 3,
+                    //       owner: account.name,
+                    //       quantity: amount
+                    //       //quantity: amount
+                    //     }
+                    // },
+                    // {
+                    //     account: 'happy',
+                    //     name: 'playgame',
+                    //     authorization: [{
+                    //       actor: account.name,
+                    //       permission: 'active'
+                    //     }],
+                    //     data: {
+                    //       cardtype: 1,
+                    //       gameid: 3,
+                    //       owner: account.name
+                    //     }
+                    //   }
+
+                       //{
+                       //  account: 'chinesegamer',
+                       //  name: 'cleargames',
+                       //  authorization: [{
+                       //    actor: account.name,
+                       //    permission: 'active'
+                       //  }],
+                       //  data: {
+                       //    gameid: 1
+                       //  }
+                       //}
+                        //{
+                        //     account: 'chinesegamer',
+                        //  name: 'withdraw',
+                        //  authorization: [{
+                        //    actor: account.name,
+                        //    permission: 'active'
+                        //  }],
+                        //  data: {
+                        //    to: account.name,
+                        //    quantity: amount
+                        //  }
+                        //}
+                    ]
+                  }
+                  // options -- example: {broadcast: false}
+                ).then(trx => {
+                    console.log("get siged transaction data: ", trx);
+                    console.log('transfer completed.');
+                })
+                //console.log('transfer completed.');
+               
+
+    //             eos.contract('happy',{requiredFields}).then(contract => {
+                    
+    // //...                   
+    //                     contract.deposit(account.name, amount, options).then(trx => {
+    //                     console.log("get siged transaction data", trx);
+    //                     })
+                        
+
+    //                         //eos.transfer(account.name, 'happy', amount, '');
+    //                         }).catch(e => {
+    //                                         console.log("error", e);
+    //                                             if (e.toString().includes("overdrawn balance")) {
+    //                                             alert("No money, go back to Getting Started and refill")
+    //                                 }
+    //                         })
+
+                //exexute contract
+                // eos.contract('eosio.token',{requiredFields}).then(contract => {
+                //     contract.transfer(account.name, "happy", amount, '').then(trx => {
+                //         console.log("get siged transaction data", trx);
+                       
+                //          });
+                //     }).catch(e => {
+                //         console.log("error", e);
+                //         if (e.toString().includes("overdrawn balance")) {
+                //             alert("No money, go back to Getting Started and refill")
+                //         }
+                //     })
+                
+
+                console.log("account name" + account.name);
+
+
+            }).catch(
+                e => {
+                    console.log("error",e);
+                }
+            );
+        
+    })
+
+</script>
 </html>
